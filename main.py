@@ -4,6 +4,7 @@ from heros import herosList
 from esquemas import Hero
 from config.database import Session, engine, Base
 from models.hero import HerosClass as HeroModel
+from fastapi.encoders import jsonable_encoder #para convertir el objeto que devuelve la consulta a json
 
 web = FastAPI()
 
@@ -13,10 +14,10 @@ Base.metadata.create_all(bind=engine)
 #-------------------metodos get-----------------
 @web.get('/heros/', tags=['List Heros'])
 def getHeros():
-    lista = []
-    for hero in herosList:
-        lista.append(hero['localized_name'])
-    return lista
+    
+    db = Session()
+    consulta = db.query(HeroModel).all() #la variable consulta devuelve un objeto de la clase modelo, no un iterable
+    return JSONResponse(status_code=200, content=jsonable_encoder(consulta))
 
 @web.get('/heros/{id}', tags=['ListHeros'])
 def getHero(id: int):
