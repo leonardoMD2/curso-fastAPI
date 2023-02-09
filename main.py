@@ -2,11 +2,14 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
 from heros import herosList
 from esquemas import Hero
+from config.database import Session, engine, Base
+from models.hero import HerosClass
 
 web = FastAPI()
 
 css = "{color:lightblue; text-align:center; padding-top:25px}"
 
+Base.metadata.create_all(bind=engine)
 #-------------------metodos get-----------------
 @web.get('/heros/', tags=['List Heros'])
 def getHeros():
