@@ -8,7 +8,7 @@ from sqlalchemy import Column,String,Integer
 class HerosClass(Base):
     __tablename__ = 'heros'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key = True)
     name= Column(String)
     localized_name= Column(String)
     primary_attr= Column(String)

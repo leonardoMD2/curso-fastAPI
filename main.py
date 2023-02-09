@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from heros import herosList
 from esquemas import Hero
 from config.database import Session, engine, Base
-from models.hero import HerosClass
+from models.hero import HerosClass as HeroModel
 
 web = FastAPI()
 
@@ -42,13 +42,15 @@ def getHeroByLegs(legs: int):
 #-------------------metodos POST-----------------
 #Inserciones en los datos.
 
-@web.post('/heros', tags=['Inserción heros'])
+@web.post('/heros', tags=['Inserción heros'], response_model=dict)
 def insertHero(hero: Hero): #la función recibirá a un hero que será de tipo Hero (referencia a la clase importada)
-    if hero.id > 137 and len(hero.localized_name) > 0:
-        #hacemos la inserción de los datos agregando un nuevo valor a la lista.
-        herosList.append(hero)
+    db = Session() #creamos la sesión para trabajar la db
+    if len(hero.localized_name) > 0:
+        newHero = HeroModel(**hero.dict()) #Guardamos como variable el modelo de la bd que recibe TODOS (**) los parametros requeridos por la clase convirtiendolos a un diccionario
+        db.add(newHero) #agregamos el nuevo hero
+        db.commit() #actualizamos la db para guardar el registro nuevo
         #La inserción se hace tomando la clase modelo en la que colocamos el esquema
-        return herosList
+        return JSONResponse(status_code=201, content={'mensaje': 'Se agregó el heroe correctamente'})
     else:
         #Devolvemos mensaje a la documentación avisando de que alguna de las verificaciones no pasaron
         return JSONResponse(content={'Error': 'Alguno de los campos id o localized_name están vacíos'}, status_code=404)
