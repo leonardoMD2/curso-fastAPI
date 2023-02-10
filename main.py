@@ -61,17 +61,16 @@ def insertHero(hero: Hero): #la función recibirá a un hero que será de tipo H
 @web.put('/heros', tags=['Modificación heros'])
 #La función putHero recibirá el esquema heredado de la clase Hero en la cual se declaró el basemodel de los datos
 def putHero(heros: Hero):
-    #Primero filtramos la info recibiendo el dato id del body de la documentación. Este dato se guarda en la instancia de la clase hero
-    listHero = list(filter(lambda hero : hero['id'] == heros.id, herosList)) 
-    #guardamos el dato para manejarlo mejor en otra variable
-    hero = listHero[0]
-    #reemplazamos los datos de la base filtrada por los obtenidos de la modificación del body en docs
-    hero['name'] = heros.name
-    hero['localized_name'] = heros.localized_name
-    hero['primary_attr'] = heros.primary_attr
-    hero['attack_type'] = heros.attack_type
-    hero['roles'] = heros.roles
-    hero['legs'] = heros.legs
+    
+    db = Session()
+    consulta = db.query(HeroModel).filter(HeroModel.id == heros.id).first()
+    consulta.name = heros.name
+    consulta.localized_name = heros.localized_name
+    consulta.primary_attr = heros.primary_attr
+    consulta.attack_type = heros.attack_type
+    consulta.roles = heros.roles
+    consulta.legs = heros.legs
     #guardamos y retornamos
-    herosList.append(hero)
-    return JSONResponse(content=herosList)
+    resultado = db.query(HeroModel).all()
+    db.commit()
+    return JSONResponse(status_code= 200,content={"mensaje":"Se modificó correctamente el heroe"})
