@@ -71,6 +71,31 @@ def putHero(heros: Hero):
     consulta.roles = heros.roles
     consulta.legs = heros.legs
     #guardamos y retornamos
-    resultado = db.query(HeroModel).all()
     db.commit()
     return JSONResponse(status_code= 200,content={"mensaje":"Se modificó correctamente el heroe"})
+
+#-------------------metodos DELETE-----------------
+#Eliminación de registros.
+
+@web.delete('/hero/{id}',tags=['Eliminación heros'], response_model=dict)
+def deleteHeros(id:int) -> Hero:
+    db = Session()
+    consulta = db.query(HeroModel).filter(HeroModel.id == id).first()
+     #eliminación de registro
+    if not consulta:
+        return JSONResponse(status_code=404, content={'mensaje':'No se encontró el heroe con esa id'})
+    db.delete(consulta)
+    db.commit()
+    return JSONResponse(status_code=200, content={'mensaje':'Se eliminó correctamente el hero'})
+
+'''
+Acá está la carga de todo el archivo heros.py (obtenido de dota2API) 
+for hero in herosList:
+    rol = ', '.join(hero['roles']) acá tuve que convertir la lista a un string para que no cause error entre los tipos de datos de la bd, la bd acepta string
+    hero['roles']=rol
+    print(hero)
+    db = Session()
+    new_hero = HeroModel(**hero) creamos un HeroModel basandonos en todos las claves-valor del diccionario obtenido a partir de herosList (hero)
+    db.add(new_hero)
+    db.commit()
+'''
