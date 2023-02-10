@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Path
 from fastapi.responses import HTMLResponse, JSONResponse
 from heros import herosList
 from esquemas import Hero
@@ -11,18 +11,23 @@ web = FastAPI()
 css = "{color:lightblue; text-align:center; padding-top:25px}"
 
 Base.metadata.create_all(bind=engine)
+
 #-------------------metodos get-----------------
 @web.get('/heros/', tags=['List Heros'])
 def getHeros():
-    
     db = Session()
     consulta = db.query(HeroModel).all() #la variable consulta devuelve un objeto de la clase modelo, no un iterable
     return JSONResponse(status_code=200, content=jsonable_encoder(consulta))
 
-@web.get('/heros/{id}', tags=['ListHeros'])
-def getHero(id: int):
-    lista = list(filter(lambda hero : hero['id'] == id, herosList))
-    return HTMLResponse(f"<style> h1 {css} </style> <h1> {lista[0]['localized_name']} </h1>")
+@web.get('/heros/{id}', tags=['heros'], response_model=Hero)
+def getHero(id: int = Path(ge=1, le=200)) -> Hero:
+    db = Session()
+    #Hacemos la query por id solicitando a la bd (HeroModel) que filtre si el id del modelo es igual al parámetro; que de eso me devuelva el primer registro
+    consulta = db.query(HeroModel).filter(HeroModel.id == id).first()
+    if not consulta:
+        return JSONResponse(status_code=404, content={'Mensaje':'No se encontró coincidencia'})
+    return JSONResponse(status_code=200, content=jsonable_encoder(consulta))
+
 
 @web.get('/heros/attr/', tags=['List heros by category'])
 def getHeroByCat(cat: str):
@@ -46,7 +51,7 @@ def getHeroByLegs(legs: int):
 @web.post('/heros', tags=['Inserción heros'], response_model=dict)
 def insertHero(hero: Hero): #la función recibirá a un hero que será de tipo Hero (referencia a la clase importada)
     db = Session() #creamos la sesión para trabajar la db
-    if len(hero.localized_name) > 0:
+    if len(hero.localized_name) > 0 and hero.id != 0:
         newHero = HeroModel(**hero.dict()) #Guardamos como variable el modelo de la bd que recibe TODOS (**) los parametros requeridos por la clase convirtiendolos a un diccionario
         db.add(newHero) #agregamos el nuevo hero
         db.commit() #actualizamos la db para guardar el registro nuevo
