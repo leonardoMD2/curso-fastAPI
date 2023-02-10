@@ -31,19 +31,15 @@ def getHero(id: int = Path(ge=1, le=200)) -> Hero:
 
 @web.get('/heros/attr/', tags=['List heros by category'])
 def getHeroByCat(cat: str):
-        lista = list(filter(lambda hero : hero['primary_attr']==cat, herosList))
-        listHeros = []
-        for hero in lista:
-            listHeros.append(hero['localized_name'])
-        return listHeros
+        db = Session()
+        consulta = db.query(HeroModel).filter(HeroModel.primary_attr == cat).all()
+        return JSONResponse(content=jsonable_encoder(consulta))
 
 @web.get('/heros/legs/', tags=['List heros by category'])
 def getHeroByLegs(legs: int):
-    lista = list(filter(lambda hero : hero['legs'] == legs, herosList))
-    listHeros = []
-    for hero in lista:
-        listHeros.append(hero['localized_name'])
-    return listHeros
+    db = Session()
+    consulta = db.query(HeroModel).filter(HeroModel.legs == legs).all()
+    return JSONResponse(content=jsonable_encoder(consulta))
 
 #-------------------metodos POST-----------------
 #Inserciones en los datos.
@@ -51,15 +47,13 @@ def getHeroByLegs(legs: int):
 @web.post('/heros', tags=['Inserción heros'], response_model=dict)
 def insertHero(hero: Hero): #la función recibirá a un hero que será de tipo Hero (referencia a la clase importada)
     db = Session() #creamos la sesión para trabajar la db
-    if len(hero.localized_name) > 0 and hero.id != 0:
-        newHero = HeroModel(**hero.dict()) #Guardamos como variable el modelo de la bd que recibe TODOS (**) los parametros requeridos por la clase convirtiendolos a un diccionario
-        db.add(newHero) #agregamos el nuevo hero
-        db.commit() #actualizamos la db para guardar el registro nuevo
+    
+    newHero = HeroModel(**hero.dict()) #Guardamos como variable el modelo de la bd que recibe TODOS (**) los parametros requeridos por la clase convirtiendolos a un diccionario
+    db.add(newHero) #agregamos el nuevo hero
+    db.commit() #actualizamos la db para guardar el registro nuevo
         #La inserción se hace tomando la clase modelo en la que colocamos el esquema
-        return JSONResponse(status_code=201, content={'mensaje': 'Se agregó el heroe correctamente'})
-    else:
-        #Devolvemos mensaje a la documentación avisando de que alguna de las verificaciones no pasaron
-        return JSONResponse(content={'Error': 'Alguno de los campos id o localized_name están vacíos'}, status_code=404)
+    return JSONResponse(status_code=201, content={'mensaje': 'Se agregó el heroe correctamente'})
+   
     
 #-------------------metodos PUT-----------------
 #Modificación en los datos.
