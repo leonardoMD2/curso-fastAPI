@@ -5,9 +5,10 @@ from esquemas import Hero
 from config.database import Session, engine, Base
 from models.hero import HerosClass as HeroModel
 from fastapi.encoders import jsonable_encoder #para convertir el objeto que devuelve la consulta a json
+from middlewares.errorHandler import ErrorHandler
 
 web = FastAPI()
-
+web.add_middleware(ErrorHandler) #importamos manejador de errores
 css = "{color:lightblue; text-align:center; padding-top:25px}"
 
 Base.metadata.create_all(bind=engine)
@@ -64,6 +65,8 @@ def putHero(heros: Hero):
     
     db = Session()
     consulta = db.query(HeroModel).filter(HeroModel.id == heros.id).first()
+    if not consulta:
+        return JSONResponse(status_code= 404,content={"mensaje":"No se encontró el id seleccionado"})
     consulta.name = heros.name
     consulta.localized_name = heros.localized_name
     consulta.primary_attr = heros.primary_attr
